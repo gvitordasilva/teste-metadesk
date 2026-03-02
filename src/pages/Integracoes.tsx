@@ -782,6 +782,147 @@ const channel = supabase
 
             <Separator />
 
+            {/* WhatsApp / Evolution API Setup Guide */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <MessageSquare className="h-5 w-5 text-green-500" />
+                  WhatsApp — Guia de Configuração (Evolution API)
+                </CardTitle>
+                <CardDescription>
+                  Integre um número de WhatsApp ao atendimento usando a Evolution API (gratuita, open-source). Funciona com qualquer número WhatsApp via QR code — sem precisar de conta WhatsApp Business API paga.
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-6">
+                {/* Steps */}
+                <div className="space-y-4">
+                  {/* Step 1 */}
+                  <div className="flex gap-4">
+                    <div className="flex-shrink-0 w-7 h-7 rounded-full bg-green-500 text-white flex items-center justify-center text-sm font-bold">1</div>
+                    <div className="flex-1 space-y-2">
+                      <p className="font-medium text-sm">Instalar e iniciar a Evolution API</p>
+                      <p className="text-xs text-muted-foreground">Rode com Docker na sua máquina ou em uma VPS (Ubuntu recomendado):</p>
+                      <div className="bg-muted rounded-lg p-3 font-mono text-xs space-y-1">
+                        <p className="text-muted-foreground"># Instalação rápida com Docker</p>
+                        <p>docker run -d \</p>
+                        <p>&nbsp;&nbsp;--name evolution-api \</p>
+                        <p>&nbsp;&nbsp;-p 8080:8080 \</p>
+                        <p>&nbsp;&nbsp;-e AUTHENTICATION_API_KEY=minha-chave-secreta \</p>
+                        <p>&nbsp;&nbsp;atendai/evolution-api:latest</p>
+                      </div>
+                      <p className="text-xs text-muted-foreground">Após iniciar, acesse <code className="font-mono bg-muted px-1 rounded">http://localhost:8080</code> (ou o IP da sua VPS)</p>
+                    </div>
+                  </div>
+
+                  {/* Step 2 */}
+                  <div className="flex gap-4">
+                    <div className="flex-shrink-0 w-7 h-7 rounded-full bg-green-500 text-white flex items-center justify-center text-sm font-bold">2</div>
+                    <div className="flex-1 space-y-2">
+                      <p className="font-medium text-sm">Criar uma instância e conectar via QR code</p>
+                      <p className="text-xs text-muted-foreground">No painel da Evolution API (Manager UI), crie uma instância com o nome que preferir e escaneie o QR code com o celular do número que deseja usar.</p>
+                      <div className="bg-muted rounded-lg p-3 font-mono text-xs space-y-1">
+                        <p className="text-muted-foreground"># Ou via API REST (substitua os valores):</p>
+                        <p>curl -X POST http://localhost:8080/instance/create \</p>
+                        <p>&nbsp;&nbsp;-H "apikey: minha-chave-secreta" \</p>
+                        <p>&nbsp;&nbsp;-H "Content-Type: application/json" \</p>
+                        <p>&nbsp;&nbsp;-d {"'"}{`{"instanceName":"metadesk","qrcode":true}`}{"'"}</p>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Step 3 */}
+                  <div className="flex gap-4">
+                    <div className="flex-shrink-0 w-7 h-7 rounded-full bg-green-500 text-white flex items-center justify-center text-sm font-bold">3</div>
+                    <div className="flex-1 space-y-2">
+                      <p className="font-medium text-sm">Configurar o webhook apontando para o Metadesk</p>
+                      <p className="text-xs text-muted-foreground">Configure na Evolution API o webhook de eventos para a URL abaixo. Isso faz com que cada mensagem recebida chegue automaticamente ao sistema:</p>
+                      <div className="flex items-center gap-2 bg-muted rounded-lg p-2 font-mono text-xs border border-green-500/30">
+                        <span className="flex-1 break-all">{SUPABASE_URL}/functions/v1/whatsapp-webhook</span>
+                        <CopyBtn text={`${SUPABASE_URL}/functions/v1/whatsapp-webhook`} id="wa-setup-webhook-url" />
+                      </div>
+                      <div className="bg-muted rounded-lg p-3 font-mono text-xs space-y-1">
+                        <p className="text-muted-foreground"># Configurar webhook via API REST:</p>
+                        <p>curl -X POST http://localhost:8080/webhook/set/metadesk \</p>
+                        <p>&nbsp;&nbsp;-H "apikey: minha-chave-secreta" \</p>
+                        <p>&nbsp;&nbsp;-H "Content-Type: application/json" \</p>
+                        <p>&nbsp;&nbsp;-d {"'"}{`{"url":"${SUPABASE_URL}/functions/v1/whatsapp-webhook","webhook_by_events":false,"events":["MESSAGES_UPSERT"]}`}{"'"}</p>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Step 4 */}
+                  <div className="flex gap-4">
+                    <div className="flex-shrink-0 w-7 h-7 rounded-full bg-green-500 text-white flex items-center justify-center text-sm font-bold">4</div>
+                    <div className="flex-1 space-y-2">
+                      <p className="font-medium text-sm">Configurar as variáveis de ambiente no Supabase</p>
+                      <p className="text-xs text-muted-foreground">
+                        Acesse{" "}
+                        <a href={`https://supabase.com/dashboard/project/${SUPABASE_PROJECT_ID}/settings/vault`} target="_blank" rel="noopener noreferrer" className="underline text-primary inline-flex items-center gap-0.5">
+                          Supabase → Project Settings → Vault Secrets <ExternalLink className="h-3 w-3" />
+                        </a>{" "}
+                        e adicione as seguintes variáveis:
+                      </p>
+                      <div className="border rounded-lg overflow-hidden">
+                        <Table>
+                          <TableHeader>
+                            <TableRow>
+                              <TableHead className="text-xs">Variável</TableHead>
+                              <TableHead className="text-xs">Valor</TableHead>
+                            </TableRow>
+                          </TableHeader>
+                          <TableBody>
+                            <TableRow>
+                              <TableCell className="font-mono text-xs"><Badge variant="outline">EVOLUTION_API_URL</Badge></TableCell>
+                              <TableCell className="text-xs text-muted-foreground">URL da sua Evolution API, ex: <code className="bg-muted px-1 rounded">http://seu-ip:8080</code></TableCell>
+                            </TableRow>
+                            <TableRow>
+                              <TableCell className="font-mono text-xs"><Badge variant="outline">EVOLUTION_API_KEY</Badge></TableCell>
+                              <TableCell className="text-xs text-muted-foreground">A chave que você definiu em <code className="bg-muted px-1 rounded">AUTHENTICATION_API_KEY</code></TableCell>
+                            </TableRow>
+                            <TableRow>
+                              <TableCell className="font-mono text-xs"><Badge variant="outline">EVOLUTION_INSTANCE_NAME</Badge></TableCell>
+                              <TableCell className="text-xs text-muted-foreground">Nome da instância criada, ex: <code className="bg-muted px-1 rounded">metadesk</code></TableCell>
+                            </TableRow>
+                          </TableBody>
+                        </Table>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* How auto-replies work */}
+                <div className="rounded-lg border border-blue-500/20 bg-blue-50/50 dark:bg-blue-950/20 p-4 space-y-2">
+                  <div className="flex items-center gap-2">
+                    <Bot className="h-4 w-4 text-blue-500" />
+                    <p className="text-sm font-medium text-blue-700 dark:text-blue-400">Respostas automáticas via Chatbot Flows</p>
+                  </div>
+                  <p className="text-xs text-muted-foreground">
+                    As respostas automáticas são gerenciadas pelo <strong>Chatbot Flow Builder</strong> (menu Administração). Crie fluxos com menus interativos, mensagens sequenciais e escalamento para atendente. Quando um cliente envia uma mensagem no WhatsApp, o sistema processa automaticamente o fluxo ativo e responde — sem intervenção manual.
+                  </p>
+                  <p className="text-xs text-muted-foreground">
+                    Quando o chatbot escalona para atendimento humano, a conversa aparece automaticamente na fila do módulo <strong>Atendimento</strong>, onde o agente pode retomar e continuar respondendo diretamente pelo WhatsApp.
+                  </p>
+                </div>
+
+                {/* Status check */}
+                <div className="rounded-lg border p-4 space-y-2">
+                  <div className="flex items-center gap-2">
+                    <CheckCircle2 className="h-4 w-4 text-green-500" />
+                    <p className="text-sm font-medium">Checklist de configuração</p>
+                  </div>
+                  <ul className="text-xs text-muted-foreground space-y-1 ml-6 list-disc">
+                    <li>Evolution API rodando e acessível</li>
+                    <li>Instância criada e QR code escaneado (status: <code className="bg-muted px-1 rounded">open</code>)</li>
+                    <li>Webhook configurado apontando para a URL acima</li>
+                    <li><code className="bg-muted px-1 rounded font-mono">EVOLUTION_API_URL</code>, <code className="bg-muted px-1 rounded font-mono">EVOLUTION_API_KEY</code> e <code className="bg-muted px-1 rounded font-mono">EVOLUTION_INSTANCE_NAME</code> definidas no Supabase</li>
+                    <li>Ao menos um Chatbot Flow ativo para o canal WhatsApp (ou deixar o bot escalonar direto para atendente)</li>
+                  </ul>
+                </div>
+              </CardContent>
+            </Card>
+
+            <Separator />
+
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               {realIntegrations.map((integration) => (
                 <Card key={integration.name}>
