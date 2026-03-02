@@ -65,9 +65,9 @@ import { Separator } from "@/components/ui/separator";
 import { EmailSetupGuide } from "@/components/integrations/EmailSetupGuide";
 import { useRole } from "@/hooks/useRole";
 
-const SUPABASE_PROJECT_ID = "udyjlesjcgxhgdiaptjp";
+const SUPABASE_PROJECT_ID = "myywckhuxgqzoaecftdj";
 const SUPABASE_URL = `https://${SUPABASE_PROJECT_ID}.supabase.co`;
-const ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVkeWpsZXNqY2d4aGdkaWFwdGpwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjkyNzQ1ODIsImV4cCI6MjA4NDg1MDU4Mn0.RrxAI4hEnYKipq68oLTl7l0-2UBr0gmYGVHZwHnOOIs";
+const ANON_KEY = "sb_publishable_XSI49d6-drICYuEA3FPQ-w_p_cS5IOR";
 
 // Edge Functions reais do projeto
 const edgeFunctions = [
