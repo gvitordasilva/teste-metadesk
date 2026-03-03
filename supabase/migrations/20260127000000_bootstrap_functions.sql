@@ -32,3 +32,19 @@ EXCEPTION WHEN undefined_table THEN
   RETURN false;
 END;
 $$;
+
+-- Criação antecipada de whatsapp_conversations para resolver dependências de ordem.
+-- A migration 20260128173037 tenta ALTER TABLE nesta tabela, mas ela só é criada
+-- formalmente em 20260211152125. Criamos aqui com estrutura mínima (sem FKs para
+-- chatbot_flows/chatbot_nodes que ainda não existem); as colunas extras são adicionadas
+-- via ALTER TABLE pelas migrations subsequentes.
+CREATE TABLE IF NOT EXISTS public.whatsapp_conversations (
+  id UUID NOT NULL DEFAULT gen_random_uuid() PRIMARY KEY,
+  phone_number TEXT NOT NULL,
+  contact_name TEXT,
+  session_data JSONB DEFAULT '{}'::jsonb,
+  status TEXT NOT NULL DEFAULT 'active',
+  created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT now(),
+  updated_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT now()
+);
+ALTER TABLE public.whatsapp_conversations ENABLE ROW LEVEL SECURITY;
