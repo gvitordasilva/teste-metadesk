@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { Navigate, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -19,8 +19,7 @@ export function LoginPage() {
 
   // If already logged in, redirect to root (RoleBasedRedirect handles the rest)
   if (user) {
-    navigate('/', { replace: true });
-    return null;
+    return <Navigate to="/" replace />;
   }
 
   const handleSubmit = async (e: React.FormEvent) => {
