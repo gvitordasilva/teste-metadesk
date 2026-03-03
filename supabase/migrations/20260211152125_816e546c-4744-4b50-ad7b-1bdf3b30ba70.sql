@@ -103,7 +103,8 @@ ALTER TABLE public.chatbot_node_options ENABLE ROW LEVEL SECURITY;
 CREATE POLICY "Admins can manage chatbot_node_options" ON public.chatbot_node_options FOR ALL USING (has_role(auth.uid(), 'admin'::app_role));
 CREATE POLICY "Public can read node options" ON public.chatbot_node_options FOR SELECT USING (true);
 
--- 8. whatsapp_conversations table
+-- 8. whatsapp_conversations table (criada no bootstrap; aqui só garantimos que existe
+-- e adicionamos current_flow_id que não foi incluído nas ALTERs anteriores)
 CREATE TABLE IF NOT EXISTS public.whatsapp_conversations (
   id UUID NOT NULL DEFAULT gen_random_uuid() PRIMARY KEY,
   phone_number TEXT NOT NULL,
@@ -117,11 +118,17 @@ CREATE TABLE IF NOT EXISTS public.whatsapp_conversations (
   updated_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT now()
 );
 ALTER TABLE public.whatsapp_conversations ENABLE ROW LEVEL SECURITY;
+-- Garante current_flow_id mesmo se a tabela já existia (criada pelo bootstrap sem esta coluna)
+ALTER TABLE public.whatsapp_conversations
+  ADD COLUMN IF NOT EXISTS current_flow_id UUID REFERENCES public.chatbot_flows(id) ON DELETE SET NULL;
 
 CREATE POLICY "Admins can manage whatsapp_conversations" ON public.whatsapp_conversations FOR ALL USING (has_role(auth.uid(), 'admin'::app_role));
 CREATE POLICY "Attendants can view whatsapp_conversations" ON public.whatsapp_conversations FOR SELECT USING (has_role(auth.uid(), 'atendente'::app_role));
 
--- Triggers for updated_at
+-- Triggers for updated_at (DROP IF EXISTS para evitar erro de duplicata)
+DROP TRIGGER IF EXISTS update_service_queue_updated_at ON public.service_queue;
+DROP TRIGGER IF EXISTS update_chatbot_flows_updated_at ON public.chatbot_flows;
+DROP TRIGGER IF EXISTS update_chatbot_nodes_updated_at ON public.chatbot_nodes;
 CREATE TRIGGER update_service_queue_updated_at BEFORE UPDATE ON public.service_queue FOR EACH ROW EXECUTE FUNCTION public.update_updated_at_column();
 CREATE TRIGGER update_chatbot_flows_updated_at BEFORE UPDATE ON public.chatbot_flows FOR EACH ROW EXECUTE FUNCTION public.update_updated_at_column();
 CREATE TRIGGER update_chatbot_nodes_updated_at BEFORE UPDATE ON public.chatbot_nodes FOR EACH ROW EXECUTE FUNCTION public.update_updated_at_column();
